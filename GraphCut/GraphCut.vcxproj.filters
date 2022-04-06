@@ -13,20 +13,41 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\GraphCut">
+      <UniqueIdentifier>{0bd4033d-e2db-43c7-9236-415ec1738548}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="maxflow\graph.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphCut.cpp">
+      <Filter>Source Files\GraphCut</Filter>
+    </ClCompile>
+    <ClCompile Include="Overlap.cpp">
+      <Filter>Source Files\GraphCut</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils.cpp">
+      <Filter>Source Files\GraphCut</Filter>
     </ClCompile>
     <ClCompile Include="maxflow.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\GraphCut</Filter>
     </ClCompile>
-    <ClCompile Include="test_maxflow.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="maxflow\graph.cpp">
+      <Filter>Source Files\GraphCut</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="maxflow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphCut.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Overlap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
