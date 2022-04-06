@@ -22,12 +22,7 @@ void Overlap::extractROI(Mat source, Mat sink) {
 			}
 		}
 	}
-
-
-	if (Utils::isDebug) {
-		string overlappath = Utils::debugPath + "/" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + "overlap.jpg";
-		imwrite(overlappath, overlapImg);
-	}
+	
 
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
@@ -45,12 +40,19 @@ void Overlap::extractROI(Mat source, Mat sink) {
 
 	Rect bbox = boundingRect(contours[maxAreaContourId]);
 	overlapCenter = bbox.x + bbox.width / 2;
-	Mat drawing = Mat(h, w, CV_8UC1);
-	drawContours(drawing, contours, maxAreaContourId, 255, 2, LINE_8, hierarchy, 0);
-	imwrite("./result/contours.jpg", drawing);
 
-	for (size_t i = 0; i < contours.size(); i++)
-	{
-		drawContours(overlapBoundary, contours, (int)i, 255, 50, LINE_8, hierarchy, 0);
+	Mat contourImg = Mat(h, w, CV_8UC1);
+	//drawContours(contourImg, contours, maxAreaContourId, 255, 2, LINE_8, hierarchy, 0);
+	drawContours(overlapBoundary, contours, maxAreaContourId, 255, 50, LINE_8, hierarchy, 0);
+
+	if (Utils::isDebug) {
+		string overlappath = Utils::debugPath + "/" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + "overlap.jpg";
+		imwrite(overlappath, overlapImg);
+
+		string contourpath = Utils::debugPath + "/" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + "contours.jpg";
+		imwrite(contourpath, overlapBoundary);
+
+
 	}
+
 }

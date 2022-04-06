@@ -73,7 +73,7 @@ void GraphCut::buildGraph() {
 
 	//fill out graph
 	G = new Graph_III(nodes_count, edge_count);
-	Mat debug = Mat(h, w, CV_8UC3);
+	Mat dataterm = Mat(h, w, CV_8UC3);
 	for (int i = 0; i < h; i++) {
 		for (int j = 0; j < w; j++) {
 			int index = i * w + j;
@@ -87,11 +87,11 @@ void GraphCut::buildGraph() {
 
 					if (j < overlapCenter) {
 						G->add_tweights(nodeIndex, INT_MAX, 0);
-						debug.at<Vec3b>(i, j) = Vec3b(255, 0, 0);
+						dataterm.at<Vec3b>(i, j) = Vec3b(255, 0, 0);
 					}
 					else {
 						G->add_tweights(nodeIndex, 0, INT_MAX);
-						debug.at<Vec3b>(i, j) = Vec3b(0, 255, 0);
+						dataterm.at<Vec3b>(i, j) = Vec3b(0, 255, 0);
 					}
 				}
 
@@ -123,7 +123,11 @@ void GraphCut::buildGraph() {
 			}
 		}
 	}
-	imwrite("./result/boundary2.jpg", debug);
+	string datatermpath = Utils::debugPath + "/" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + "dataTerm.jpg";
+	if (Utils::isDebug) {
+		imwrite(datatermpath, dataterm);
+	}
+
 }
 
 Mat GraphCut::textureMapping() {

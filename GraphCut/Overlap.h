@@ -14,6 +14,7 @@ public:
 	int overlapCenter;
 	Mat overlapImg;
 	Mat overlapBoundary;
+
 private:
 	bool isROI(int y, int x);
 	Mat sourceImg;
