@@ -26,12 +26,17 @@ private:
 	void loadImagesPathFromFolder(string path, vector<std::string>& imgs);
 
 	int edgeEnergy(Point2d s, Point2d t);
+	void buildGraph();
+	Mat textureMapping();
 	Mat stitchingImages();
 
 	Mat sourceImg;
 	Mat sinkImg;
 
 	Overlap overlap;
+	Graph_III* G;
+
+	std::map<int, int> pixelIndex2nodeIndex;
 
 	string inputDir;
 	string outputDir;

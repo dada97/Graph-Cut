@@ -4,13 +4,12 @@ bool Overlap::isROI(int y, int x) {
 	return sourceImg.at<Vec4b>(y, x)[3] && sinkImg.at<Vec4b>(y, x)[3];
 }
 
-Mat Overlap::extractROI(Mat source, Mat sink) {
+void Overlap::extractROI(Mat source, Mat sink) {
 	sourceImg = source;
 	sinkImg = sink;
 
 	int w = sourceImg.size().width;
 	int h = sourceImg.size().height;
-
 
 	overlapImg = Mat(h, w, CV_8UC1);
 	overlapBoundary = Mat(h, w, CV_8UC1);
@@ -29,7 +28,6 @@ Mat Overlap::extractROI(Mat source, Mat sink) {
 		string overlappath = Utils::debugPath + "/" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + "overlap.jpg";
 		imwrite(overlappath, overlapImg);
 	}
-
 
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
@@ -55,6 +53,4 @@ Mat Overlap::extractROI(Mat source, Mat sink) {
 	{
 		drawContours(overlapBoundary, contours, (int)i, 255, 50, LINE_8, hierarchy, 0);
 	}
-
-	return overlapImg;
 }

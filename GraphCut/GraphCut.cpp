@@ -14,8 +14,6 @@ void GraphCut::loadImagesPathFromFolder(std::string path, vector<string>& imgsPa
 	}
 }
 
-
-
 int GraphCut::edgeEnergy(Point2d s, Point2d t) {
 
 	Vec4b& colorA_s = sourceImg.at<Vec4b>(s.x, s.y);
@@ -34,21 +32,12 @@ int GraphCut::edgeEnergy(Point2d s, Point2d t) {
 	return energy;
 }
 
+void GraphCut::buildGraph() {
 
-Mat GraphCut::stitchingImages() {
-
-	auto start = high_resolution_clock::now();
 	int w = sourceImg.size().width;
 	int h = sourceImg.size().height;
 
-	if (w != sinkImg.size().width || h != sinkImg.size().height) {
-		std::printf("Input Images Resolution Not Matched");
-		return {};
-	}
-
-	std::map<int, int> pixelIndex2nodeInex;
-
-	Mat overlapImg = overlap.extractROI(sourceImg, sinkImg);
+	Mat overlapImg = overlap.overlapImg;
 	Mat overlapBoundary = overlap.overlapBoundary;
 	int overlapCenter = overlap.overlapCenter;
 
@@ -58,7 +47,8 @@ Mat GraphCut::stitchingImages() {
 		for (int j = 0; j < w; j++) {
 			int index = i * w + j;
 			if (overlapImg.at <uchar>(i, j)) {
-				pixelIndex2nodeInex[index] = nodes_count++;
+
+				pixelIndex2nodeIndex[index] = nodes_count++;
 			}
 		}
 	}
@@ -68,13 +58,13 @@ Mat GraphCut::stitchingImages() {
 	for (int i = 0; i < h; i++) {
 		for (int j = 0; j < w; j++) {
 			int index = i * w + j;
-			if (pixelIndex2nodeInex.find(index) != pixelIndex2nodeInex.end()) {
+			if (pixelIndex2nodeIndex.find(index) != pixelIndex2nodeIndex.end()) {
 				int leftIndex = i * w + (j - 1);
-				if (pixelIndex2nodeInex.find(leftIndex) != pixelIndex2nodeInex.end()) {
+				if (pixelIndex2nodeIndex.find(leftIndex) != pixelIndex2nodeIndex.end()) {
 					edge_count++;
 				}
 				int upIndex = (i - 1) * w + j;
-				if (pixelIndex2nodeInex.find(upIndex) != pixelIndex2nodeInex.end()) {
+				if (pixelIndex2nodeIndex.find(upIndex) != pixelIndex2nodeIndex.end()) {
 					edge_count++;
 				}
 			}
@@ -82,25 +72,25 @@ Mat GraphCut::stitchingImages() {
 	}
 
 	//fill out graph
-	Graph_III G = Graph_III(nodes_count, edge_count);
+	G = new Graph_III(nodes_count, edge_count);
 	Mat debug = Mat(h, w, CV_8UC3);
 	for (int i = 0; i < h; i++) {
 		for (int j = 0; j < w; j++) {
 			int index = i * w + j;
 			if (overlapImg.at <uchar>(i, j)) {
-				G.add_node();
+				G->add_node();
 				Point2d p_node(i, j);
-				int nodeIndex = pixelIndex2nodeInex.find(index)->second;
+				int nodeIndex = pixelIndex2nodeIndex.find(index)->second;
 
 				if (overlapImg.at<uchar>(i, j) == 255, overlapBoundary.at<uchar>(i, j) == 255) {
 
 
 					if (j < overlapCenter) {
-						G.add_tweights(nodeIndex, INT_MAX, 0);
+						G->add_tweights(nodeIndex, INT_MAX, 0);
 						debug.at<Vec3b>(i, j) = Vec3b(255, 0, 0);
 					}
 					else {
-						G.add_tweights(nodeIndex, 0, INT_MAX);
+						G->add_tweights(nodeIndex, 0, INT_MAX);
 						debug.at<Vec3b>(i, j) = Vec3b(0, 255, 0);
 					}
 				}
@@ -114,34 +104,33 @@ Mat GraphCut::stitchingImages() {
 				// left edge weight
 				int leftIndex = i * w + (j - 1);
 				Point2d p_left(i, j - 1);
-				auto leftNodeMap = pixelIndex2nodeInex.find(leftIndex);
-				if (leftNodeMap != pixelIndex2nodeInex.end()) {
+				auto leftNodeMap = pixelIndex2nodeIndex.find(leftIndex);
+				if (leftNodeMap != pixelIndex2nodeIndex.end()) {
 					int e = edgeEnergy(p_node, p_left);
-					G.add_edge(nodeIndex, leftNodeMap->second, e, e);
+					G->add_edge(nodeIndex, leftNodeMap->second, e, e);
 				}
 
 				// up edge weight
 				int upIndex = (i - 1) * w + j;
 				Point2d p_up(i - 1, j);
-				auto upNodeMap = pixelIndex2nodeInex.find(upIndex);
-				if (upNodeMap != pixelIndex2nodeInex.end()) {
+				auto upNodeMap = pixelIndex2nodeIndex.find(upIndex);
+				if (upNodeMap != pixelIndex2nodeIndex.end()) {
 					int e = edgeEnergy(p_node, p_up);
-					G.add_edge(nodeIndex, upNodeMap->second, e, e);
+					G->add_edge(nodeIndex, upNodeMap->second, e, e);
 				}
 
 
 			}
 		}
 	}
-
-
 	imwrite("./result/boundary2.jpg", debug);
-	// solve min-cut
-	int flow = G.maxflow();
-	std::printf("Flow = %d\n", flow);
+}
 
-	// output Result label,image,(image with cut seam)
-	Mat nodeType(h, w, CV_8UC4, Scalar(0, 0, 0));
+Mat GraphCut::textureMapping() {
+
+	int w = sourceImg.size().width;
+	int h = sourceImg.size().height;
+
 	Mat label(h, w, CV_8UC4, Scalar(0, 0, 0));
 	Mat image(h, w, CV_8UC4, Scalar(0, 0, 0, 0));
 
@@ -149,7 +138,7 @@ Mat GraphCut::stitchingImages() {
 		for (int x = 0; x < w; x++) {
 
 			int index = y * w + x;
-			auto nodeMap = pixelIndex2nodeInex.find(index);
+			auto nodeMap = pixelIndex2nodeIndex.find(index);
 
 			bool check = true;
 			int cur_seg = -1;
@@ -158,12 +147,12 @@ Mat GraphCut::stitchingImages() {
 			for (int wx = 0; wx < 10; wx++) {
 				if (x + wx > 0 && x + wx < w - 1) {
 					int win_idx = (y)*w + (x + wx);
-					auto nodeMap = pixelIndex2nodeInex.find(win_idx);
-					if (nodeMap != pixelIndex2nodeInex.end()) {
+					auto nodeMap = pixelIndex2nodeIndex.find(win_idx);
+					if (nodeMap != pixelIndex2nodeIndex.end()) {
 						if (cur_seg == -1) {
-							cur_seg = G.what_segment(nodeMap->second);
+							cur_seg = G->what_segment(nodeMap->second);
 						}
-						if (cur_seg != G.what_segment(nodeMap->second)) {
+						if (cur_seg != G->what_segment(nodeMap->second)) {
 							check = false;
 						}
 
@@ -176,12 +165,12 @@ Mat GraphCut::stitchingImages() {
 
 
 			if (check == true) {
-				if (nodeMap != pixelIndex2nodeInex.end()) {
-					if (G.what_segment(nodeMap->second) == Graph_III::SOURCE) {
+				if (nodeMap != pixelIndex2nodeIndex.end()) {
+					if (G->what_segment(nodeMap->second) == Graph_III::SOURCE) {
 						label.at < Vec4b >(y, x) = Vec4b(255, 0, 0, 127);
 						image.at < Vec4b >(y, x) = sourceImg.at < Vec4b >(y, x);
 					}
-					else if (G.what_segment(nodeMap->second) == Graph_III::SINK) {
+					else if (G->what_segment(nodeMap->second) == Graph_III::SINK) {
 						label.at < Vec4b >(y, x) = Vec4b(0, 255, 0, 127);
 						image.at < Vec4b >(y, x) = sinkImg.at < Vec4b >(y, x);
 					}
@@ -232,38 +221,61 @@ Mat GraphCut::stitchingImages() {
 
 		}
 	}
+	return image;
+}
+
+Mat GraphCut::stitchingImages() {
+
+	auto start = high_resolution_clock::now();
+	int w = sourceImg.size().width;
+	int h = sourceImg.size().height;
+
+	if (w != sinkImg.size().width || h != sinkImg.size().height) {
+		std::printf("Input Images Resolution Not Matched");
+		return {};
+	}
+	overlap.extractROI(sourceImg, sinkImg);
+	buildGraph();
+	// solve min-cut
+	int flow = G->maxflow();
+	std::printf("Flow = %d\n", flow);
+
+	// output Result label,image,(image with cut seam)
+	Mat nodeType(h, w, CV_8UC4, Scalar(0, 0, 0));
+	Mat result = textureMapping();
+
+	pixelIndex2nodeIndex.clear();
+	G->reset();
+	delete G;
 
 	auto stop = high_resolution_clock::now();
 	auto duration = duration_cast<milliseconds>(stop - start);
 	auto secs = std::chrono::duration_cast<std::chrono::duration<float>>(duration);
 	cout << "Execution time: " << secs.count() << "s" << endl;
 
-	return image;
+	return result;
 }
 
 void GraphCut::startStitching() {
 
 
+	//create result folder
 	cv::utils::fs::createDirectory(outputDir);
 
+	string panoramaDir = cv::utils::fs::join(outputDir, "panorama");
+	cv::utils::fs::createDirectory(panoramaDir);
+	
 	if (Utils::isDebug) {
 		debugDir = cv::utils::fs::join(outputDir, "debug");
 		cv::utils::fs::createDirectory(debugDir);
 	}
+
 	cout << inputDir << endl;
+
+	//list all frame name
 	for (const auto& entry : fs::directory_iterator(inputDir)) {
 		string frame_name = entry.path().filename().string();
-	
 		string imagesDir = entry.path().string();
-		vector<string> imagesPath;
-
-		loadImagesPathFromFolder(imagesDir, imagesPath);
-		cout << "Total images: " << imagesPath.size() << endl;
-
-		auto start = high_resolution_clock::now();
-
-		sourceImg = imread(imagesPath[0], CV_LOAD_IMAGE_UNCHANGED);
-		Utils::sourceImgindex = 0;
 
 		if (Utils::isDebug) {
 			string debugFrameDir = cv::utils::fs::join(debugDir, frame_name);
@@ -271,23 +283,30 @@ void GraphCut::startStitching() {
 			Utils::debugPath = debugFrameDir;
 		}
 
+		vector<string> imagesPath;
 
-		string panoramaDir = cv::utils::fs::join(outputDir, "panorama");
-		cv::utils::fs::createDirectory(panoramaDir);
+		//load all images path in current frame
+		loadImagesPathFromFolder(imagesDir, imagesPath);
+		cout << "\nTotal images: " << imagesPath.size() << endl;
+
+		auto start = high_resolution_clock::now();
+
+		sourceImg = imread(imagesPath[0], CV_LOAD_IMAGE_UNCHANGED);
+		Utils::sourceImgindex = 0;
 		Mat result;
-
+		//Start stitching image
 		for (int i = 1; i < imagesPath.size(); i++) {
 			Utils::sinkImgindex = i;
 			cout << imagesPath[i] << endl;
-			sinkImg = imread(imagesPath[i], CV_LOAD_IMAGE_UNCHANGED);
 
+			sinkImg = imread(imagesPath[i], CV_LOAD_IMAGE_UNCHANGED);
 			result = stitchingImages();
 
 			sourceImg = result;
 			Utils::sourceImgindex = i;
-
 		}
 
+		//write panorama result
 		string resultPath = cv::utils::fs::join(panoramaDir, frame_name);
 		imwrite(resultPath + ".png", result);
 

@@ -9,7 +9,7 @@ using namespace cv;
 
 class Overlap {
 public:
-	Mat extractROI(Mat sourceImg, Mat sinkImg);
+	void extractROI(Mat sourceImg, Mat sinkImg);
 
 	int overlapCenter;
 	Mat overlapImg;
