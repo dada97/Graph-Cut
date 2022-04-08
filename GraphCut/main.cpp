@@ -44,8 +44,7 @@ void main(int argc, char** argv)
     string input_dir = "./input/" + filename;
     string output_dir = "./result/" + filename;
 
-    GraphCut graphcut;
-    graphcut.init(input_dir, output_dir);
+    GraphCut graphcut(input_dir, output_dir) ;
     graphcut.startStitching();
 }
 

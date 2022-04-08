@@ -36,6 +36,9 @@
     <ClCompile Include="maxflow\graph.cpp">
       <Filter>Source Files\GraphCut</Filter>
     </ClCompile>
+    <ClCompile Include="ImagesController.cpp">
+      <Filter>Source Files\GraphCut</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="maxflow.h">
@@ -48,9 +51,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Utils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ImageData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ImagesController.h">

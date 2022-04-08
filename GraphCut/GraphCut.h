@@ -21,42 +21,13 @@ namespace fs = std::filesystem;
 
 class GraphCut {
 public:
-	void init(string inputpath, string outputpath);
+	GraphCut() {};
+	GraphCut(string inputpath,string outputpath);
 	void startStitching();
 private:
-	void loadImagesPathFromFolder(string path, vector<std::string>& imgs);
-
-	int edgeEnergy(Point2d s, Point2d t);
-	void buildGraph();
-	Mat textureMapping();
-	Mat stitchingImages();
-
-	Mat sourceImg;
-	Mat sinkImg;
-
-	Overlap overlap;
-	Graph_III* G;
-
-	std::map<int, int> pixelIndex2nodeIndex;
-
-
 	string inputDir;
 	string outputDir;
 	string debugDir;
-	vector<string> imagesDir;
-	Mat source_gradient;
-	Mat sink_gradient;
-	
-	Mat source_rescale;
-	Mat sink_rescale;
 
-
-
-	vector<map<pair<int, int>, int>>previousEnergy;
-	int currentFrameindex=0;
-	int imgindex = 0;
-
-	
-
-	int scalefactor = 3;
+	ImagesController imagesController;
 };

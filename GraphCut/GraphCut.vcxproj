@@ -154,6 +154,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="GraphCut.cpp" />
+    <ClCompile Include="ImagesController.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="maxflow.cpp" />
     <ClCompile Include="maxflow\graph.cpp" />
@@ -163,7 +164,6 @@
   <ItemGroup>
     <ClInclude Include="GraphCut.h" />
     <ClInclude Include="ImagesController.h" />
-    <ClInclude Include="ImageData.h" />
     <ClInclude Include="maxflow.h" />
     <ClInclude Include="Overlap.h" />
     <ClInclude Include="Utils.h" />
