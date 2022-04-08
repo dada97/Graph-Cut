@@ -2,6 +2,7 @@
 
 #include "maxflow.h"
 #include "Overlap.h"
+#include "ImagesController.h"
 #include <filesystem>
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui.hpp>
@@ -38,9 +39,24 @@ private:
 
 	std::map<int, int> pixelIndex2nodeIndex;
 
+
 	string inputDir;
 	string outputDir;
 	string debugDir;
 	vector<string> imagesDir;
+	Mat source_gradient;
+	Mat sink_gradient;
+	
+	Mat source_rescale;
+	Mat sink_rescale;
 
+
+
+	vector<map<pair<int, int>, int>>previousEnergy;
+	int currentFrameindex=0;
+	int imgindex = 0;
+
+	
+
+	int scalefactor = 3;
 };

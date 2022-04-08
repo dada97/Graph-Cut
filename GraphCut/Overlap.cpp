@@ -1,7 +1,13 @@
 #include "overlap.h"
 
 bool Overlap::isROI(int y, int x) {
-	return sourceImg.at<Vec4b>(y, x)[3] && sinkImg.at<Vec4b>(y, x)[3];
+	Vec4b source_color = sourceImg.at<Vec4b>(y, x)[0];
+	Vec4b sink_color = sinkImg.at<Vec4b>(y, x)[0];
+
+	if(source_color==sink_color&&source_color[0]==0&&source_color[1]==0&& source_color[2] == 0)
+		return false;
+	
+	return (sourceImg.at<Vec4b>(y, x)[3] && sinkImg.at<Vec4b>(y, x)[3]);
 }
 
 void Overlap::extractROI(Mat source, Mat sink) {
@@ -42,8 +48,8 @@ void Overlap::extractROI(Mat source, Mat sink) {
 	overlapCenter = bbox.x + bbox.width / 2;
 
 	Mat contourImg = Mat(h, w, CV_8UC1);
-	//drawContours(contourImg, contours, maxAreaContourId, 255, 2, LINE_8, hierarchy, 0);
-	drawContours(overlapBoundary, contours, maxAreaContourId, 255, 50, LINE_8, hierarchy, 0);
+
+	drawContours(overlapBoundary, contours, maxAreaContourId, 255, 10, LINE_8, hierarchy, 0);
 
 	if (Utils::isDebug) {
 		string overlappath = Utils::debugPath + "/" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + "overlap.jpg";
@@ -54,5 +60,55 @@ void Overlap::extractROI(Mat source, Mat sink) {
 
 
 	}
+
+}
+
+
+void Overlap::updateROI(Mat label){
+
+	int w = label.size().width;
+	int h = label.size().height;
+
+	Mat mask = Mat(h, w, CV_8UC1);
+
+	for (int y = 0; y < h; y++) {
+		for (int x = 0; x < w; x++) {
+			Vec4b color = label.at<Vec4b>(y, x);
+
+			
+			for (int wy = 0; wy < 2; wy++) {
+				for (int wx = 0; wx < 2; wx++) {
+
+					if (color[0] != 0 && color[1] != 0 && color[2] != 0 && color[3] != 0) {
+						continue;
+					}
+					else if (x + wx < w && y + wy < h) {
+
+						Vec4b othercolor = label.at<Vec4b>(y+wy, x+wx);
+						if (color == Vec4b(255, 0, 0, 255)&&othercolor== Vec4b(0, 255, 0, 255)) {
+							mask.at<uchar>(y, x) = 255;
+							break;
+						}
+						else if (color == Vec4b(0, 255, 0, 255) && othercolor == Vec4b(255, 0, 0, 255)) {
+							mask.at<uchar>(y, x) = 255;
+							break;
+						}
+					}
+				}
+			}
+
+
+		}
+	}
+
+	Mat structureElement = getStructuringElement(MORPH_RECT, Size(10,10), Point(-1, -1));
+
+	dilate(mask, mask, structureElement, Point(-1, -1),1);
+	//inRange(label, Vec4b(255, 0, 0, 255), Vec4b(255, 0, 0, 255), mask);
+	
+	if (Utils::isDebug) {
+		imwrite("./result/test.jpg", mask);
+	}
+
 
 }
