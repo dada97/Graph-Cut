@@ -4,12 +4,9 @@
 GraphCut::GraphCut(string inputpath, string outputpath) {
 	inputDir = inputpath;
 	outputDir = outputpath;
-
-	imagesController = ImagesController(inputpath,outputpath);
 }
 
 void GraphCut::startStitching() {
-
 
 	//create result folder
 	cv::utils::fs::createDirectory(outputDir);
@@ -23,8 +20,6 @@ void GraphCut::startStitching() {
 	}
 
 	cout << inputDir << endl;
-
-
 	//list all frame name
 	for (const auto& entry : fs::directory_iterator(inputDir)) {
 		string frame_name = entry.path().filename().string();
@@ -38,18 +33,12 @@ void GraphCut::startStitching() {
 
 		//load all images path in current frame
 		imagesController.readImages(imagesDir);
-
 		cout << "\nTotal images: " << imagesController.getImagesNumber() << endl;
 
 		auto start = high_resolution_clock::now();
-
-		Utils::sourceImgindex = 0;
 		//Start stitching image
-		imagesController.stitchingImages();
-
-
+		Mat result = imagesController.stitchingImages();
 		//write panorama result
-		Mat result=imagesController.result;
 		string resultPath = cv::utils::fs::join(panoramaDir, frame_name);
 		imwrite(resultPath + ".png", result);
 
@@ -57,6 +46,7 @@ void GraphCut::startStitching() {
 		auto duration = duration_cast<milliseconds>(stop - start);
 		auto secs = std::chrono::duration_cast<std::chrono::duration<float>>(duration);
 		cout << "Total Execution Time: " << secs.count() << "s"<<endl << endl;
-	
+		
+		imagesController.currentFrameindex++;
 	}
 }

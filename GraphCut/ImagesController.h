@@ -11,7 +11,6 @@
 using namespace std;
 using namespace cv;
 
-
 namespace fs = std::filesystem;
 using maxflow::Graph_III;
 
@@ -26,38 +25,31 @@ struct StitchImgData
 class ImagesController {
 public:
 	ImagesController() {};
-	ImagesController(string inputpath,string outputpath);
-	
 	void readImages(string imgdir);
-	void stitchingImages();
+	int getImagesNumber();
+
+	Mat stitchingImages();
+
+	int currentFrameindex = 0;
+private:
+	int edgeEnergy(Point2d s, Point2d t);
 	void buildGraph();
 	Mat textureMapping();
 
-	int getImagesNumber();
-
-
-
-	Mat result;
-private:
-	int edgeEnergy(Point2d s, Point2d t);
-	Mat stitchImage(Mat source,Mat sink);
+	Mat stitchImage(Mat source, Mat sink);
 
 	vector<Mat> images;
-
-	string inputDir;
-	string outputDir;
-
-	Overlap overlap;
-	Graph_III* G;
+	Mat stitchResult;
 
 	StitchImgData sourceData;
 	StitchImgData sinkData;
 
+	Overlap overlap;
+	Graph_III* G;
+
 	std::map<int, int> pixelIndex2nodeIndex;
 	vector<map<pair<int, int>, int>>previousEnergy;
 
-	int currentFrameindex = 0;
 	int imgindex = 0;
-
 	int scalefactor = 3;
 };
