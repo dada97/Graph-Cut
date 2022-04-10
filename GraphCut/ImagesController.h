@@ -14,37 +14,42 @@ using namespace cv;
 namespace fs = std::filesystem;
 using maxflow::Graph_III;
 
-struct StitchImgData
+struct ImgData
 {
 	Mat img;
 	Mat imgScaled;
 	Mat gradient;
 };
 
-
 class ImagesController {
 public:
 	ImagesController() {};
-	void readImages(string imgdir);
-	int getImagesNumber();
-
-	Mat stitchingImages();
+	Mat stitchingImages(string imgdir);
 
 	int currentFrameindex = 0;
 private:
-	int edgeEnergy(Point2d s, Point2d t);
+
+	void readImages(string imgdir);
+	void findOverlapRegion();
 	void buildGraph();
+	int edgeEnergy(Point2d s, Point2d t);
+	Mat stitchImage(Mat source, Mat sink);
 	Mat textureMapping();
 
-	Mat stitchImage(Mat source, Mat sink);
+	vector<ImgData> images;
+	vector<ImgData> previousImg;
+	vector<Overlap> overlapROI;
 
-	vector<Mat> images;
 	Mat stitchResult;
 
-	StitchImgData sourceData;
-	StitchImgData sinkData;
+	ImgData sourceData;
+	ImgData sinkData;
+
+	int sourceIndex;
+	int sinkIndex;
 
 	Overlap overlap;
+	Mat label;
 	Graph_III* G;
 
 	std::map<int, int> pixelIndex2nodeIndex;

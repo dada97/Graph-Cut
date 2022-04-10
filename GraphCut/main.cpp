@@ -1,22 +1,9 @@
 
 #include <iostream>
-#include <opencv2/highgui/highgui.hpp>  // Video write
-#include <filesystem>
-#include <chrono>
 #include "GraphCut.h"
 
 using namespace std;
 
-namespace fs = std::filesystem;
-
-void loadImageFromFolder(std::string input, std::vector<std::string>& imgs) {
-
-    for (const auto& entry : fs::directory_iterator(input)) {
-        if (entry.path().extension() == ".png") {
-            imgs.push_back(entry.path().string());
-        }
-    }
-}
 
 /*
     I/O struture

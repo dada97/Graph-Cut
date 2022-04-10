@@ -30,14 +30,10 @@ void GraphCut::startStitching() {
 			cv::utils::fs::createDirectory(debugFrameDir);
 			Utils::debugPath = debugFrameDir;
 		}
-
-		//load all images path in current frame
-		imagesController.readImages(imagesDir);
-		cout << "\nTotal images: " << imagesController.getImagesNumber() << endl;
-
+	
 		auto start = high_resolution_clock::now();
 		//Start stitching image
-		Mat result = imagesController.stitchingImages();
+		Mat result = imagesController.stitchingImages(imagesDir);
 		//write panorama result
 		string resultPath = cv::utils::fs::join(panoramaDir, frame_name);
 		imwrite(resultPath + ".png", result);
