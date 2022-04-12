@@ -17,10 +17,10 @@ public:
 
 	Mat overlapImg;
 	Mat overlapBoundary;
+	int overlapCenter;
 	Mat dataTermMap;
 private:
 	bool isROI(int y, int x);
-	int overlapCenter;
 	Mat sourceImg;
 	Mat sinkImg;
 	Mat label;

@@ -142,11 +142,12 @@ void Overlap::updateROI(Mat label){
 		}
 	}
 
-	Mat structureElement = getStructuringElement(MORPH_RECT, Size(20,20), Point(-1, -1));
-	dilate(mask, mask, structureElement, Point(-1, -1),1);
+	Mat structureElement = getStructuringElement(MORPH_RECT, Size(25, 25), Point(-1, -1));
+	dilate(mask, mask, structureElement, Point(-1, -1), 1);
 
-	bitwise_and(mask, overlapImg,mask);
-	label.copyTo(color,mask);
+	bitwise_and(mask, overlapImg, mask);
+	label.copyTo(color, mask);
+
 
 	Mat dataTerm = Mat(h, w, CV_8UC3);
 	Mat notmask;

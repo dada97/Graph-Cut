@@ -16,12 +16,12 @@ void ImagesController::readImages(string imgdir) {
 			resize(imgData.img, imgData.imgScaled, Size(w / scalefactor, h / scalefactor), 0, 0, INTER_LINEAR);
 
 			Mat sourceGray, sinkGray;
-			cvtColor(imgData.imgScaled, sourceGray, COLOR_RGB2GRAY, 0);
+			cv::cvtColor(imgData.imgScaled, sourceGray, COLOR_RGB2GRAY, 0);
 			Laplacian(sourceGray, imgData.gradient, CV_8U, 1, 1, 0, BORDER_DEFAULT);
 
 			if (Utils::isDebug) {
 				string srcgradientpath = Utils::debugPath + "/sourceGradient" + to_string(index) + ".png";
-				imwrite(srcgradientpath, imgData.gradient);
+				cv::imwrite(srcgradientpath, imgData.gradient);
 
 			}
 
@@ -35,19 +35,19 @@ void ImagesController::readImages(string imgdir) {
 //find overlap Region
 void ImagesController::findOverlapRegion() {
 	for (int i = 1; i < images.size(); i++) {
-		Overlap roi(images[i-1].img,images[i].img,i-1,i);
+		Overlap roi(images[i - 1].img, images[i].img, i - 1, i);
 		overlapROI.push_back(roi);
 	}
 }
 
 int ImagesController::edgeEnergy(Point2d s, Point2d t) {
-	
+
 	int w = images[imgindex].imgScaled.size().width;
 	int h = images[imgindex].imgScaled.size().height;
-	
+
 
 	Vec4b& colorA_s = images[imgindex].imgScaled.at<Vec4b>(s.x, s.y);
-	Vec4b& colorB_s = images[imgindex+1].imgScaled.at<Vec4b>(s.x, s.y);
+	Vec4b& colorB_s = images[imgindex + 1].imgScaled.at<Vec4b>(s.x, s.y);
 
 	Vec4b& colorA_t = images[imgindex].imgScaled.at<Vec4b>(t.x, t.y);
 	Vec4b& colorB_t = images[imgindex + 1].imgScaled.at<Vec4b>(t.x, t.y);
@@ -64,9 +64,9 @@ int ImagesController::edgeEnergy(Point2d s, Point2d t) {
 	int cb = abs(colorA_s[2] - colorB_s[2]) + abs(colorA_t[2] - colorB_t[2]);
 
 	int gradientcost = abs(gradientA_s - gradientB_s) + abs(gradientA_t - gradientB_t);
-	int rgbcost = (cr + cg + cb) / 3 ;
+	int rgbcost = (cr + cg + cb) / 3;
 
-	int energy = 0.5*rgbcost+0.5*gradientcost;
+	int energy = 0.5 * rgbcost + 0.5 * gradientcost;
 
 	//int energy = (0.5 * rgbcost + 0.5 * (gradientcost));
 	if (currentFrameindex > 0) {
@@ -75,8 +75,12 @@ int ImagesController::edgeEnergy(Point2d s, Point2d t) {
 
 		int idx2 = (t.x) * w + (t.y);
 
+
 		auto previouskey = previousEnergy[imgindex].find(make_pair(idx, idx2));
-		energy = (energy) * 0.3 + previouskey->second * 0.7;
+		energy = (energy) * 0.2 + previouskey->second * 0.8;
+
+		//auto previouskey = previousEnergy[imgindex].find(make_pair(idx, idx2));
+		//energy = (energy) * 0.5 + previouskey->second * 0.5;
 
 		/*Vec4b& colorPA_s = previousImg[imgindex].imgScaled.at<Vec4b>(s.x, s.y);
 		Vec4b& colorPB_s = previousImg[imgindex + 1].imgScaled.at<Vec4b>(s.x, s.y);
@@ -100,6 +104,7 @@ int ImagesController::edgeEnergy(Point2d s, Point2d t) {
 		int gradientcost = 0.5 * (abs(gradientA_s - gradientB_s) + abs(gradientA_t - gradientB_t) )+ 0.5 * (abs(gradientPA_s - gradientPB_s) + abs(gradientPA_t - gradientPB_t));
 
 		energy  = (0.5 * (cr + cg + cb) / 3 + 0.5 * (cr_p + cg_p + cb_p) / 3)*0.5 + gradientcost*0.5;*/
+
 	}
 
 
@@ -107,7 +112,7 @@ int ImagesController::edgeEnergy(Point2d s, Point2d t) {
 }
 
 void ImagesController::buildGraph() {
-	
+
 	int w = sourceData.img.size().width;
 	int h = sourceData.img.size().height;
 
@@ -157,7 +162,7 @@ void ImagesController::buildGraph() {
 
 	string datatermpath = Utils::debugPath + "/dataTerm" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".jpg";
 	if (Utils::isDebug) {
-		imwrite(datatermpath, dataterm);
+		cv::imwrite(datatermpath, dataterm);
 	}
 
 	std::map<std::pair<int, int>, int> currentEdgeEnergy;
@@ -174,11 +179,11 @@ void ImagesController::buildGraph() {
 				if (dataterm.at<Vec3b>(i * scalefactor, j * scalefactor) == Vec3b(255, 0, 0)) {
 					G->add_tweights(nodeIndex, INT_MAX, 0);
 				}
-				else if(dataterm.at<Vec3b>(i * scalefactor, j * scalefactor) == Vec3b(0, 255, 0)){
+				else if (dataterm.at<Vec3b>(i * scalefactor, j * scalefactor) == Vec3b(0, 255, 0)) {
 					G->add_tweights(nodeIndex, 0, INT_MAX);
 				}
 
-		
+
 				// left edge weight
 				int leftIndex = i * rescale_w + (j - 1);
 				Point2d p_left(i, (j - 1));
@@ -212,130 +217,250 @@ void ImagesController::buildGraph() {
 		previousEnergy[imgindex] = currentEdgeEnergy;
 	}
 	currentEdgeEnergy.clear();
-	
+
 }
 
 Mat ImagesController::textureMapping() {
 	int w = sourceData.img.size().width;
 	int h = sourceData.img.size().height;
-	
-	
+
+
 
 	int rescale_w = sourceData.img.size().width / scalefactor;
 	int rescale_h = sourceData.img.size().height / scalefactor;
 
 	label = Mat(h, w, CV_8UC3, Scalar(0, 0, 0));
 	Mat image(h, w, CV_8UC4, Scalar(0, 0, 0, 0));
-	
+
+
 	Mat mask_src(h, w, CV_8UC1);
 	Mat mask_sink(h, w, CV_8UC1);
 
 	Mat src_bgr;
 	Mat sink_bgr;
-	
-	cvtColor(sourceData.img, src_bgr, CV_BGRA2BGR);
-	cvtColor(sinkData.img, sink_bgr, CV_BGRA2BGR);
 
+	cv::cvtColor(sourceData.img, src_bgr, CV_BGRA2BGR);
+	cv::cvtColor(sinkData.img, sink_bgr, CV_BGRA2BGR);
 
-	for (int y = 0; y < h; y++) {
-		for (int x = 0; x < w; x++) {
+	if (linear_blend) {
+		for (int y = 0; y < h; y++) {
+			for (int x = 0; x < w; x++) {
 
-			int index = (y / scalefactor) * (w / scalefactor) + (x / scalefactor);
-			auto nodeMap = pixelIndex2nodeIndex.find(index);
+				int index = (y / scalefactor) * (w / scalefactor) + (x / scalefactor);
+				auto nodeMap = pixelIndex2nodeIndex.find(index);
 
-			bool check = true;
+				bool check = true;
 
-			int node_seg = G->what_segment(nodeMap->second);
-			int cur_seg = -1;
+				int node_seg = G->what_segment(nodeMap->second);
+				int cur_seg = -1;
+				//check seam position
 
-			//draw label
-
-			if (sourceData.img.at < Vec4b >(y, x)[3] != 0) {
-				if (sourceData.img.at < Vec4b >(y, x) != Vec4b(0, 0, 0, 255)) {
-					mask_src.at< uchar >(y, x) = 255;
+				for (int wx = 0; wx < 10; wx++) {
+					if (x + wx > 0 && x + wx < w - 1) {
+						int win_idx = (y / scalefactor) * (w / scalefactor) + (x + wx) / scalefactor;
+						auto nodeMap2 = pixelIndex2nodeIndex.find(win_idx);
+						if (nodeMap2 != pixelIndex2nodeIndex.end()) {
+							if (cur_seg == -1) {
+								cur_seg = G->what_segment(nodeMap2->second);
+							}
+							if (cur_seg != G->what_segment(nodeMap2->second)) {
+								check = false;
+							}
+						}
+					}
 				}
-				image.at < Vec4b >(y, x) = sourceData.img.at < Vec4b >(y, x);
-			}
-			else if (sinkData.img.at < Vec4b >(y, x)[3] != 0) {
-				if (sinkData.img.at < Vec4b >(y, x) != Vec4b(0, 0, 0, 255)) {
-					mask_sink.at< uchar >(y, x) = 255;
+
+
+				//draw label
+				if (nodeMap != pixelIndex2nodeIndex.end()) {
+					if (node_seg == Graph_III::SOURCE) {
+						label.at < Vec4b >(y, x) = Vec4b(255, 0, 0, 255);
+					}
+					else if (node_seg == Graph_III::SINK) {
+						label.at < Vec4b >(y, x) = Vec4b(0, 255, 0, 255);
+					}
 				}
-				image.at < Vec4b >(y, x) = sinkData.img.at < Vec4b >(y, x);
-			}
 
-
-			if (nodeMap != pixelIndex2nodeIndex.end()) {
-				if (node_seg == Graph_III::SOURCE) {
-					mask_src.at< uchar >(y, x) = 255;
-					mask_sink.at< uchar >(y, x) = 0;
-					label.at < Vec3b >(y, x) = Vec3b(255, 0, 0);
-				}
-				else if (node_seg == Graph_III::SINK) {
-					mask_sink.at< uchar >(y, x) = 255;
-					mask_src.at< uchar >(y, x) = 0;
-					label.at < Vec3b >(y, x) = Vec3b(0, 255, 0);
-				}
-			}
-		}
-	}
-	
-
-	if (Utils::isDebug) {
-		string labelpath = Utils::debugPath + "/label" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
-		imwrite(labelpath, label);
-	}
-
-
-
-	detail::MultiBandBlender blender(false,5);
-	blender.prepare(Rect(0,0,w,h));
-	blender.feed(src_bgr, mask_src,Point2f(0,0));
-	blender.feed(sink_bgr, mask_sink, Point2f(0, 0));
-	Mat result, result_mask;
-	Mat deg, deg2;
-
-	src_bgr.copyTo(deg, mask_src);
-
-	sink_bgr.copyTo(deg2, result_mask);
-	blender.blend(result, result_mask);
-	
-	Mat result_notmask;
-	bitwise_not(result_mask, result_notmask);
-
-	image.copyTo(image, result_notmask);
-
-	result.convertTo(result, CV_8UC3);
-	cvtColor(result, result, CV_BGR2BGRA, 4);
-	result.copyTo(image, overlapROI[imgindex].overlapImg);
-
-	for (int i = 0; i < h; i++) {
-		for (int j = 0; j < w; j++) {	
-			if (overlapROI[imgindex].overlapImg.at<uchar>(i, j) != 0 && overlapROI[imgindex].overlapBoundary.at<uchar>(i, j) != 0) {
-				
-				Vec4b color = result.at<Vec4b>(i,j);
-				if (color[0] != 0 && color[1] != 0 && color[2] != 0 && color[3] != 0) {
-					if (overlapROI[imgindex].dataTermMap.at<Vec3b>(i, j) == Vec3b(255, 0, 0)) {
-						image.at<Vec4b>(i, j)[0] = (sourceData.img.at<Vec4b>(i, j)[0] + result.at<Vec4b>(i, j)[0]) / 2;
-						image.at<Vec4b>(i, j)[1] = (sourceData.img.at<Vec4b>(i, j)[1] + result.at<Vec4b>(i, j)[1]) / 2;
-						image.at<Vec4b>(i, j)[2] = (sourceData.img.at<Vec4b>(i, j)[2] + result.at<Vec4b>(i, j)[2]) / 2;
-						image.at<Vec4b>(i, j)[3] = 255;
+				if (check == true) {
+					if (nodeMap != pixelIndex2nodeIndex.end()) {
+						if (node_seg == Graph_III::SOURCE) {
+							image.at < Vec4b >(y, x) = sourceData.img.at < Vec4b >(y, x);
+						}
+						else if (node_seg == Graph_III::SINK) {
+							image.at < Vec4b >(y, x) = sinkData.img.at < Vec4b >(y, x);
+						}
 					}
 					else {
-						image.at<Vec4b>(i, j)[0] = (sinkData.img.at<Vec4b>(i, j)[0] + result.at<Vec4b>(i, j)[0]) / 2;
-						image.at<Vec4b>(i, j)[1] = (sinkData.img.at<Vec4b>(i, j)[1] + result.at<Vec4b>(i, j)[1]) / 2;
-						image.at<Vec4b>(i, j)[2] = (sinkData.img.at<Vec4b>(i, j)[2] + result.at<Vec4b>(i, j)[2]) / 2;
-						image.at<Vec4b>(i, j)[3] = 255;
+						if (sourceData.img.at < Vec4b >(y, x)[3] != 0) {
+							image.at < Vec4b >(y, x) = sourceData.img.at < Vec4b >(y, x);
+						}
+						else if (sinkData.img.at < Vec4b >(y, x)[3] != 0) {
+							image.at < Vec4b >(y, x) = sinkData.img.at < Vec4b >(y, x);
+						}
+					}
+				}
+				else {
+					if (image.at < Vec4b >(y, x) == Vec4b(0, 0, 0, 0)) {
+						for (int wx = 0; wx < 10; wx++) {
+							if (x + wx > 0 && x + wx < w - 1) {
+
+								int pos_y = y;
+								int pos_x = x + wx;
+
+								if (sourceData.img.at < Vec4b >(pos_y, pos_x)[3] == 0) {
+									image.at < Vec4b >(pos_y, pos_x) = sinkData.img.at < Vec4b >(pos_y, pos_x);
+								}
+								else if (sinkData.img.at < Vec4b >(pos_y, pos_x)[3] == 0) {
+									image.at < Vec4b >(pos_y, pos_x) = sourceData.img.at < Vec4b >(pos_y, pos_x);
+								}
+								else if (image.at < Vec4b >(pos_y, pos_x)[3] == 0) {
+									float alpha = 1.0 - (1.0 / 10.0 * ((float)wx));
+
+									float beta = 1 - alpha;
+
+									image.at < Vec4b >(pos_y, pos_x) = sourceData.img.at < Vec4b >(pos_y, pos_x) * alpha + sinkData.img.at < Vec4b >(pos_y, pos_x) * beta;
+								}
+							}
+						}
 					}
 				}
 			}
 		}
 	}
+	else {
+		for (int y = 0; y < h; y++) {
+			for (int x = 0; x < w; x++) {
 
-	return image;
+				int index = (y / scalefactor) * (w / scalefactor) + (x / scalefactor);
+				auto nodeMap = pixelIndex2nodeIndex.find(index);
+
+				bool check = true;
+
+
+				int node_seg = G->what_segment(nodeMap->second);
+				int cur_seg = -1;
+
+				//draw label
+
+				if (sourceData.img.at < Vec4b >(y, x)[3] != 0) {
+					if (sourceData.img.at < Vec4b >(y, x) != Vec4b(0, 0, 0, 255)) {
+						mask_src.at< uchar >(y, x) = 255;
+					}
+					image.at < Vec4b >(y, x) = sourceData.img.at < Vec4b >(y, x);
+				}
+				else if (sinkData.img.at < Vec4b >(y, x)[3] != 0) {
+					if (sinkData.img.at < Vec4b >(y, x) != Vec4b(0, 0, 0, 255)) {
+						mask_sink.at< uchar >(y, x) = 255;
+					}
+					image.at < Vec4b >(y, x) = sinkData.img.at < Vec4b >(y, x);
+				}
+
+
+				if (nodeMap != pixelIndex2nodeIndex.end()) {
+					if (node_seg == Graph_III::SOURCE) {
+						mask_src.at< uchar >(y, x) = 255;
+						mask_sink.at< uchar >(y, x) = 0;
+						label.at < Vec3b >(y, x) = Vec3b(255, 0, 0);
+					}
+					else if (node_seg == Graph_III::SINK) {
+						mask_sink.at< uchar >(y, x) = 255;
+						mask_src.at< uchar >(y, x) = 0;
+						label.at < Vec3b >(y, x) = Vec3b(0, 255, 0);
+					}
+				}
+			}
+		}
+
+
+		if (Utils::isDebug) {
+			string labelpath = Utils::debugPath + "/label" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
+			cv::imwrite(labelpath, label);
+		}
+
+
+
+		detail::MultiBandBlender blender(false, 5);
+		blender.prepare(Rect(0, 0, w, h));
+		blender.feed(src_bgr, mask_src, Point2f(0, 0));
+		blender.feed(sink_bgr, mask_sink, Point2f(0, 0));
+		Mat result, result_mask;
+		Mat deg, deg2;
+
+		src_bgr.copyTo(deg, mask_src);
+
+		sink_bgr.copyTo(deg2, result_mask);
+		blender.blend(result, result_mask);
+
+		Mat result_notmask;
+		cv::bitwise_not(result_mask, result_notmask);
+
+		image.copyTo(image, result_notmask);
+
+		result.convertTo(result, CV_8UC3);
+		cv::cvtColor(result, result, CV_BGR2BGRA, 4);
+		result.copyTo(image, overlapROI[imgindex].overlapImg);
+
+		for (int i = 0; i < h; i++) {
+			for (int j = 0; j < w; j++) {
+				if (overlapROI[imgindex].overlapImg.at<uchar>(i, j) != 0 && overlapROI[imgindex].overlapBoundary.at<uchar>(i, j) != 0) {
+
+					Vec4b color = result.at<Vec4b>(i, j);
+					if (color[0] != 0 && color[1] != 0 && color[2] != 0 && color[3] != 0) {
+						if (overlapROI[imgindex].dataTermMap.at<Vec3b>(i, j) == Vec3b(255, 0, 0)) {
+							image.at<Vec4b>(i, j)[0] = (sourceData.img.at<Vec4b>(i, j)[0] + result.at<Vec4b>(i, j)[0]) / 2;
+							image.at<Vec4b>(i, j)[1] = (sourceData.img.at<Vec4b>(i, j)[1] + result.at<Vec4b>(i, j)[1]) / 2;
+							image.at<Vec4b>(i, j)[2] = (sourceData.img.at<Vec4b>(i, j)[2] + result.at<Vec4b>(i, j)[2]) / 2;
+							image.at<Vec4b>(i, j)[3] = 255;
+						}
+						else {
+							image.at<Vec4b>(i, j)[0] = (sinkData.img.at<Vec4b>(i, j)[0] + result.at<Vec4b>(i, j)[0]) / 2;
+							image.at<Vec4b>(i, j)[1] = (sinkData.img.at<Vec4b>(i, j)[1] + result.at<Vec4b>(i, j)[1]) / 2;
+							image.at<Vec4b>(i, j)[2] = (sinkData.img.at<Vec4b>(i, j)[2] + result.at<Vec4b>(i, j)[2]) / 2;
+							image.at<Vec4b>(i, j)[3] = 255;
+						}
+					}
+				}
+			}
+		}
+
+
+		string src_mask = Utils::debugPath + "/src_mask" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
+		imwrite(src_mask, mask_src);
+
+		string sink_mask = Utils::debugPath + "/sink_mask" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
+		imwrite(sink_mask, mask_sink);
+
+		string rgbp = Utils::debugPath + "/rgb" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
+		imwrite(rgbp, deg);
+
+		string rgb2p = Utils::debugPath + "/rgb2" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
+		imwrite(rgb2p, deg2);
+
+		string res = Utils::debugPath + "/res" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
+		imwrite(res, result);
+
+
+
+
+		if (Utils::isDebug) {
+			string labelpath = Utils::debugPath + "/label" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
+			imwrite(labelpath, label);
+
+		}
+
+
+
+		if (Utils::isDebug) {
+			string labelpath = Utils::debugPath + "/" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + "label.png";
+			imwrite(labelpath, label);
+		}
+
+		return image;
+	}
 }
 
 Mat ImagesController::stitchImage(Mat source, Mat sink) {
-	
+
 	//initial source sink img;
 	int w = source.size().width;
 	int h = source.size().height;
@@ -353,7 +478,7 @@ Mat ImagesController::stitchImage(Mat source, Mat sink) {
 
 	cout << "build graph" << endl;
 	buildGraph();
-	
+
 	// solve min-cut
 	int flow = G->maxflow();
 	std::printf("Flow = %d\n", flow);
@@ -399,11 +524,11 @@ Mat ImagesController::stitchingImages(string imagesDir) {
 		stitchResult = stitchImage(source, sink);
 		source = stitchResult;
 		Utils::sourceImgindex = i;
-		previousImg.assign(images.begin(),images.end());
+		previousImg.assign(images.begin(), images.end());
 
 	}
 
 	images.clear();
-	
+
 	return stitchResult;
 }

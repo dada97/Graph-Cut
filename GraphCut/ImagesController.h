@@ -55,6 +55,8 @@ private:
 	std::map<int, int> pixelIndex2nodeIndex;
 	vector<map<pair<int, int>, int>>previousEnergy;
 
+
 	int imgindex = 0;
 	int scalefactor = 3;
+	bool linear_blend = false;
 };
