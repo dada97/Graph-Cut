@@ -8,8 +8,8 @@ bool Overlap::isROI(int y, int x) {
 	Vec4b source_color = sourceImg.at<Vec4b>(y, x)[0];
 	Vec4b sink_color = sinkImg.at<Vec4b>(y, x)[0];
 
-	if(source_color==sink_color&&source_color[0]==0&&source_color[1]==0&& source_color[2] == 0)
-		return false;
+	//if(source_color==sink_color&&source_color[0]==0&&source_color[1]==0&& source_color[2] == 0)
+	//	return false;
 	
 	return (sourceImg.at<Vec4b>(y, x)[3] && sinkImg.at<Vec4b>(y, x)[3]);
 }

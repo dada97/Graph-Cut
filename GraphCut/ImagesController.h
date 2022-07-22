@@ -41,6 +41,7 @@ private:
 	vector<Overlap> overlapROI;
 
 	Mat stitchResult;
+	Mat seamResult;
 
 	ImgData sourceData;
 	ImgData sinkData;
@@ -57,6 +58,6 @@ private:
 
 
 	int imgindex = 0;
-	int scalefactor = 3;
+	int scalefactor = 1;
 	bool linear_blend = false;
 };

@@ -6,5 +6,5 @@ namespace Utils {
 	int sourceImgindex;
 	int sinkImgindex;
 
-	bool isDebug = true;
+	bool isDebug = false;
 }
