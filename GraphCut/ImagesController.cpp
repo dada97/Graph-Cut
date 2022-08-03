@@ -68,47 +68,10 @@ int ImagesController::edgeEnergy(Point2d s, Point2d t) {
 	int rgbcost = (cr + cg + cb) / 3;
 	energy = 0.5 * rgbcost + 0.5 * gradientcost;
 
-	
-
-	//int energy = (0.5 * rgbcost + 0.5 * (gradientcost));
 	if (currentFrameindex > 0) {
-
 		int idx = (s.x) * w + (s.y);
-
 		int idx2 = (t.x) * w + (t.y);
-
-
-		//auto previouskey = previousEnergy[imgindex].find(make_pair(idx, idx2));
-		//energy = (energy) * 0.2 + previouskey->second * 0.8;
-
-		//auto previouskey = previousEnergy[imgindex].find(make_pair(idx, idx2));
-		//energy = (energy) * 0.5 + previouskey->second * 0.5;
-
-		/*Vec4b& colorPA_s = previousImg[imgindex].imgScaled.at<Vec4b>(s.x, s.y);
-		Vec4b& colorPB_s = previousImg[imgindex + 1].imgScaled.at<Vec4b>(s.x, s.y);
-
-		Vec4b& colorPA_t = previousImg[imgindex].imgScaled.at<Vec4b>(t.x, t.y);
-		Vec4b& colorPB_t = previousImg[imgindex + 1].imgScaled.at<Vec4b>(t.x, t.y);
-
-		int cr_p = abs(colorPA_s[0] - colorPB_s[0]) + abs(colorPA_t[0] - colorPB_t[0]);
-		int cg_p = abs(colorPA_s[0] - colorPB_s[0]) + abs(colorPA_t[0] - colorPB_t[0]);
-		int cb_p = abs(colorPA_s[0] - colorPB_s[0]) + abs(colorPA_t[0] - colorPB_t[0]);
-
-
-		int gradientPA_s = previousImg[imgindex].imgScaled.at<Vec4b>(s.x, s.y)[3] ? images[imgindex].gradient.at<uchar>(s.x, s.y) : 0;
-		int gradientPB_s = previousImg[imgindex + 1].imgScaled.at<Vec4b>(s.x, s.y)[3] ? images[imgindex + 1].gradient.at<uchar>(s.x, s.y) : 0;
-
-		int gradientPA_t = previousImg[imgindex].imgScaled.at<Vec4b>(t.x, t.y)[3] ? images[imgindex].gradient.at<uchar>(t.x, t.y) : 0;
-		int gradientPB_t = previousImg[imgindex + 1].imgScaled.at<Vec4b>(t.x, t.y)[3] ? images[imgindex + 1].gradient.at<uchar>(t.x, t.y) : 0;
-
-
-		int rgbcost = 0.5 * (cr + cg + cb) / 3 + 0.5 * (cr_p + cg_p + cb_p) / 3;
-		int gradientcost = 0.5 * (abs(gradientA_s - gradientB_s) + abs(gradientA_t - gradientB_t) )+ 0.5 * (abs(gradientPA_s - gradientPB_s) + abs(gradientPA_t - gradientPB_t));
-
-		energy = 0.5 * rgbcost + 0.5 * gradientcost;*/
-
 	}
-
 
 	return energy;
 }
@@ -226,8 +189,6 @@ Mat ImagesController::textureMapping() {
 	int w = sourceData.img.size().width;
 	int h = sourceData.img.size().height;
 
-
-
 	int rescale_w = sourceData.img.size().width / scalefactor;
 	int rescale_h = sourceData.img.size().height / scalefactor;
 
@@ -243,7 +204,7 @@ Mat ImagesController::textureMapping() {
 
 	cv::cvtColor(sourceData.img, src_bgr, CV_BGRA2BGR);
 	cv::cvtColor(sinkData.img, sink_bgr, CV_BGRA2BGR);
-	cout << linear_blend << endl;
+
 	if (linear_blend) {
 		for (int y = 0; y < h; y++) {
 			for (int x = 0; x < w; x++) {
@@ -349,15 +310,7 @@ Mat ImagesController::textureMapping() {
 					if (overlapROI[imgindex].overlapImg.at<uchar>(y, x) == 0)
 						mask_src.at< uchar >(y, x) = 255;
 					else if (x < overlapROI[imgindex].overlapCenter) 
-						mask_src.at< uchar >(y, x) = 255;
-					
-					/*if (sourceData.img.at < Vec4b >(y, x) != Vec4b(0, 0, 0, 255)) {
-						if(overlapROI[imgindex].overlapImg.at<uchar>(y, x)==0)
-							mask_src.at< uchar >(y, x) = 255;*/
-						
-					
-				
-
+						mask_src.at< uchar >(y, x) = 255;				
 					
 				}
 				if (sinkData.img.at < Vec4b >(y, x)[3] != 0) {
@@ -367,18 +320,6 @@ Mat ImagesController::textureMapping() {
 						mask_sink.at< uchar >(y, x) = 255;
 
 				}
-			
-				//else if (sinkData.img.at < Vec4b >(y, x)[3] != 0) {
-				//	if (sourceData.img.at < Vec4b >(y, x) != Vec4b(0, 0, 0, 255)) {
-				//		if (overlapROI[imgindex].overlapImg.at<uchar>(y, x) == 0)
-				//			mask_sink.at< uchar >(y, x) = 255;
-				//		
-				//		//image.at < Vec4b >(y, x) = sinkData.img.at < Vec4b >(y, x);
-				//		//image.at<Vec4b>(y, x) = Scalar(0, 0, 255, 255);
-				//	}
-				//	
-				//}
-
 
 				if (nodeMap != pixelIndex2nodeIndex.end()) {
 					if (node_seg == Graph_III::SOURCE) {
@@ -424,11 +365,6 @@ Mat ImagesController::textureMapping() {
 		sourceData.img.copyTo(image, mask_src);
 		sinkData.img.copyTo(image, mask_sink);
 
-
-		//image.copyTo(image, result_notmask);
-
-
-
 		result.convertTo(result, CV_8UC3);
 		cv::cvtColor(result, result, CV_BGR2BGRA, 4);
 		
@@ -442,35 +378,12 @@ Mat ImagesController::textureMapping() {
 					int gray1 = 0.299 * sourceData.img.at<Vec4b>(i, j)[2] + 0.587 * sourceData.img.at<Vec4b>(i, j)[1] + 0.114 * sourceData.img.at<Vec4b>(i, j)[0];
 					int gray2 = 0.299 * sinkData.img.at<Vec4b>(i, j)[2] + 0.587 * sinkData.img.at<Vec4b>(i, j)[1] + 0.114 * sinkData.img.at<Vec4b>(i, j)[0];
 					if (gray2 - gray1 > 0&&gray1<10) {
-						image.at<Vec4b>(i, j) = sinkData.img.at<Vec4b>(i, j);
-						//image.at<Vec4b>(i, j) = Vec4b(255, 0, 0, 255);
-							
-					}
+						image.at<Vec4b>(i, j) = sinkData.img.at<Vec4b>(i, j);					}
 					else if (gray1 - gray2 > 0 && gray2 <10 ) {
 						image.at<Vec4b>(i, j) = sourceData.img.at<Vec4b>(i, j);
-						//image.at<Vec4b>(i, j) = Vec4b(0, 0, 255, 255);
+						
 					}
-					//if (overlapROI[imgindex].overlapBoundary.at<uchar>(i, j) == 255 && overlapROI[imgindex].overlapImg.at<uchar>(i, j) == 255) {
-					//	
-					//	int grays = 0.299 * result.at<Vec4b>(i, j)[2] + 0.587 * result.at<Vec4b>(i, j)[1] + 0.114 * result.at<Vec4b>(i, j)[0];
-					//	if (gray1 - grays > 60 ) {
-					//		image.at<Vec4b>(i, j) = sourceData.img.at<Vec4b>(i, j)*0.5 + result.at<Vec4b>(i,j)*0.5;
-					//		//image.at<Vec4b>(i, j) = Vec4b(255, 0, 0, 255);
-
-					//	}
-					//	else if (gray2 - grays > 60) {
-					//		image.at<Vec4b>(i, j) = sinkData.img.at<Vec4b>(i, j)*0.5 + result.at<Vec4b>(i,j)*0.5;
-					//		//image.at<Vec4b>(i, j) = Vec4b(0, 0, 255, 255);
-					//	}
-					//	
-					//	/*Vec4b color;
-					//	color[0] = (sourceData.img.at<Vec4b>(i, j)[0] + result.at<Vec4b>(i, j)[0]) / 2;
-					//	color[1] = (sourceData.img.at<Vec4b>(i, j)[1] + result.at<Vec4b>(i, j)[1]) / 2;
-					//	color[2] = (sourceData.img.at<Vec4b>(i, j)[2] + result.at<Vec4b>(i, j)[2]) / 2;
-					//	color[3] = 255;
-					//	image.at<Vec4b>(i, j) = color;*/
-					//}
-
+				
 				
 				}
 				
@@ -478,7 +391,7 @@ Mat ImagesController::textureMapping() {
 		}
 
 		if (Utils::isDebug) {
-		/*	image.copyTo(seamResult);*/
+			//draw seam
 			if (imgindex == 0) {
 				image.copyTo(seamResult);
 			}
@@ -514,101 +427,30 @@ Mat ImagesController::textureMapping() {
 			}
 
 			string seam_path = Utils::debugPath + "/seamresult.png";
-			imwrite(seam_path, seamResult);
-		}
+			cv::imwrite(seam_path, seamResult);
 
-		//			Vec4b color = result.at<Vec4b>(i, j);
-		//			if (color[0] != 0 && color[1] != 0 && color[2] != 0 && color[3] != 0) {
-		//				if (overlapROI[imgindex].dataTermMap.at<Vec3b>(i, j) == Vec3b(255, 0, 0)) {
-		//					Vec4b color;
-		//				/*	color[0] = (sourceData.img.at<Vec4b>(i, j)[0] + result.at<Vec4b>(i, j)[0]) / 2;
-		//					color[1] = (sourceData.img.at<Vec4b>(i, j)[1] + result.at<Vec4b>(i, j)[1]) / 2;
-		//					color[2] = (sourceData.img.at<Vec4b>(i, j)[2] + result.at<Vec4b>(i, j)[2]) / 2;
-		//					color[3] = 255;*/
-
-		//					int gray1 = 0.299 * sourceData.img.at<Vec4b>(i, j)[2] + 0.587 * sourceData.img.at<Vec4b>(i, j)[1] + 0.114 * sourceData.img.at<Vec4b>(i, j)[0];
-		//					int gray2 = 0.299 * sinkData.img.at<Vec4b>(i, j)[2] + 0.587 * sinkData.img.at<Vec4b>(i, j)[1] + 0.114 * sinkData.img.at<Vec4b>(i, j)[0];
-		//		
-		//				/*	else {
-		//						
-		//					}*/
-		//					if (j < overlapCenter) {
-		//						if (gray2 - gray1 > 10 && gray1 < 20) {
-		//							image.at < Vec4b >(i, j) = Scalar(255, 0, 0, 255);
-		//						}
-		//					/*	else {
-		//							image.at<Vec4b>(i, j) = color;
-		//						}*/
-		//					}
-		//					//image.at<Vec4b>(i, j) = Vec4b(255, 0, 0, 255);
-
-		//				}
-		//				else {
-		//					//image.at<Vec4b>(i, j) = Vec4b(0, 255, 0, 255);
-		//					//Vec4b color;
-		//					//color[0] = (sinkData.img.at<Vec4b>(i, j)[0] + result.at<Vec4b>(i, j)[0]) / 2;
-		//					//color[1] = (sinkData.img.at<Vec4b>(i, j)[1] + result.at<Vec4b>(i, j)[1]) / 2;
-		//					//color[2] = (sinkData.img.at<Vec4b>(i, j)[2] + result.at<Vec4b>(i, j)[2]) / 2;
-		//					//color[3] = 255;
-
-		//					int gray1 = 0.299 * sourceData.img.at<Vec4b>(i, j)[2] + 0.587 * sourceData.img.at<Vec4b>(i, j)[1] + 0.114 * sourceData.img.at<Vec4b>(i, j)[0];
-		//					int gray2 = 0.299 * sinkData.img.at<Vec4b>(i, j)[2] + 0.587 * sinkData.img.at<Vec4b>(i, j)[1] + 0.114 * sinkData.img.at<Vec4b>(i, j)[0];
-
-		//					if (j >= overlapCenter) {
-		//						
-		//						//image.at<Vec4b>(i, j) = sinkData.img.at<Vec4b>(i, j);
-		//						if (gray1 - gray2 > 10 && gray2<20) {
-		//							image.at < Vec4b >(i, j) = Scalar(0, 255, 0, 255);
-		//							//image.at<Vec4b>(i, j) = sourceData.img.at<Vec4b>(i, j);
-		//						}
-		//						
-		//					}
-
-		//					//if (abs(gray2 - gray1) > 100) {
-		//					//	image.at<Vec4b>(i, j) = sourceData.img.at<Vec4b>(i, j);
-		//					//}
-		//					//else {
-		//					//	//image.at<Vec4b>(i, j) = color;
-		//					//}
-
-		//				}
-		//			}
-		//		}
-		//	}
-		//}
-
-	
-		string src_mask = Utils::debugPath + "/src_mask" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
-		imwrite(src_mask, mask_src);
-
-		string sink_mask = Utils::debugPath + "/sink_mask" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
-		imwrite(sink_mask, mask_sink);
-
-		string rgbp = Utils::debugPath + "/rgb" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
-		imwrite(rgbp, deg);
-
-		string rgb2p = Utils::debugPath + "/rgb2" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
-		imwrite(rgb2p, deg2);
-
-		string res = Utils::debugPath + "/res" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
-		imwrite(res, image);
-
-
-
-
-		if (Utils::isDebug) {
 			string labelpath = Utils::debugPath + "/label" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
-			imwrite(labelpath, label);
+			cv::imwrite(labelpath, label);
 
+
+			string src_mask = Utils::debugPath + "/src_mask" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
+			cv::imwrite(src_mask, mask_src);
+
+			string sink_mask = Utils::debugPath + "/sink_mask" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
+			cv::imwrite(sink_mask, mask_sink);
+
+			string rgbp = Utils::debugPath + "/rgb" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
+			cv::imwrite(rgbp, deg);
+
+			string rgb2p = Utils::debugPath + "/rgb2" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
+			cv::imwrite(rgb2p, deg2);
+
+			string res = Utils::debugPath + "/res" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + ".png";
+			cv::imwrite(res, image);
+
+			labelpath = Utils::debugPath + "/" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + "label.png";
+			cv::imwrite(labelpath, label);
 		}
-
-
-
-		if (Utils::isDebug) {
-			string labelpath = Utils::debugPath + "/" + to_string(Utils::sourceImgindex) + "_" + to_string(Utils::sinkImgindex) + "label.png";
-			imwrite(labelpath, label);
-		}
-
 		return image;
 	}
 }
@@ -655,7 +497,6 @@ Mat ImagesController::stitchingImages(string imagesDir) {
 	cout << "\nTotal images: " << images.size() << endl;
 
 	//extract overlapRegion
-
 	if (currentFrameindex == 0) {
 		cout << "find overlap" << endl;
 		findOverlapRegion();
